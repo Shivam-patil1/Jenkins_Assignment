@@ -1,4 +1,4 @@
-name: Staging Deploy
+name: Deploy to Staging
 
 on:
   push:
@@ -10,22 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Deploy to Staging Server
-        uses: appleboy/ssh-action@v0.1.15
+        uses: appleboy/ssh-action@v0.1.4   # ✅ use a valid version
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_KEY }}
           port: 22
-          sync: true
-          source: "./"
-          target: "~/staging-app"
-          rsync_opts: "--exclude='.git/' --exclude='node_modules/'"
-
-      - name: Slack Notification
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data '{"text":"Staging deployment successful!"}' ${{ secrets.SLACK_WEBHOOK }}
+          script: |
+            cd /home/ubuntu/app || mkdir -p /home/ubuntu/app && cd /home/ubuntu/app
+            git pull origin staging
+            npm install --production
+            pm2 restart app || pm2 start app.js --name app
