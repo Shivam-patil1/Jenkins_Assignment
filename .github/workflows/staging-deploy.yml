@@ -1,4 +1,4 @@
-name: Staging Deploy
+name: Staging Deployment
 
 on:
   push:
@@ -10,21 +10,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout your code
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    # Checkout the repo
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # 2️⃣ Deploy via SSH
-      - name: Deploy to Staging Server
-        uses: appleboy/ssh-action@v0.1.4
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_KEY }}
-          port: 22
-          script: |
-            # create folder if not exists
-            cd ~/staging-app || mkdir -p ~/staging-app && cd ~/staging-app
-            # pull latest code
-            git pull origin staging
-            # install dependencies
+    # Set up Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    # Install npm dependencies
+    - name: Install dependencies
+      run: npm install --production
+
+    # Deploy to server via SSH
+    - name: Deploy to Staging Server
+      uses: appleboy/ssh-action@v0.1.4
+      with:
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.STAGING_USER }}
+        key: ${{ secrets.STAGING_KEY }}
+        port: ${{ secrets.STAGING_PORT }}
+        script: |
+          cd ~/staging-app || mkdir -p ~/staging-app && cd ~/staging-app
+          git fetch origin
+          git checkout staging
+          git reset --hard origin/staging
+          npm install --production
+          pm2 restart staging-app || pm2 start app.js --name staging-app
+
+    # Send Slack notification
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@v2
+      with:
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        status: custom
+        custom_payload: |
+          {
+            "text": "✅ Staging deployment completed successfully for branch *staging*."
+          }
