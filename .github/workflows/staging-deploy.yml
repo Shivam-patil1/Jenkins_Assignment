@@ -23,6 +23,7 @@ jobs:
     # Install npm dependencies
     - name: Install dependencies
       run: npm install --production
+      working-directory: ./staging  
 
     # Deploy to server via SSH
     - name: Deploy to Staging Server
