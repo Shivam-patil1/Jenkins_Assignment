@@ -20,8 +20,9 @@ jobs:
         username: ${{ secrets.STAGING_USER }}
         key: ${{ secrets.STAGING_KEY }}
         port: 22
-        source: "./"                  # Local folder to deploy
-        target: "~/staging-app"       # Remote folder on your server
+        sync: true
+        source: "./"                   # Local files to deploy
+        target: "~/staging-app"        # Remote folder
         rsync_opts: "--exclude='.git/' --exclude='node_modules/'"
 
     - name: Slack Notification
