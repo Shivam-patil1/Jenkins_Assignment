@@ -10,22 +10,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Deploy to Staging Server
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.STAGING_HOST }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.STAGING_KEY }}
-        port: 22
-        sync: true
-        source: "./"                   # Local files to deploy
-        target: "~/staging-app"        # Remote folder
-        rsync_opts: "--exclude='.git/' --exclude='node_modules/'"
+      - name: Deploy to Staging Server
+        uses: appleboy/ssh-action@v0.1.15
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_KEY }}
+          port: 22
+          sync: true
+          source: "./"
+          target: "~/staging-app"
+          rsync_opts: "--exclude='.git/' --exclude='node_modules/'"
 
-    - name: Slack Notification
-      run: |
-        curl -X POST -H 'Content-type: application/json' \
-        --data '{"text":"Staging deployment successful!"}' ${{ secrets.SLACK_WEBHOOK }}
+      - name: Slack Notification
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"Staging deployment successful!"}' ${{ secrets.SLACK_WEBHOOK }}
