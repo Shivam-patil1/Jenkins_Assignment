@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Staging Deploy
 
 on:
   push:
@@ -10,18 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout your code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Deploy via SSH
       - name: Deploy to Staging Server
-        uses: appleboy/ssh-action@v0.1.4   # ✅ use a valid version
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_KEY }}
           port: 22
           script: |
-            cd /home/ubuntu/app || mkdir -p /home/ubuntu/app && cd /home/ubuntu/app
+            # create folder if not exists
+            cd ~/staging-app || mkdir -p ~/staging-app && cd ~/staging-app
+            # pull latest code
             git pull origin staging
-            npm install --production
-            pm2 restart app || pm2 start app.js --name app
+            # install dependencies
