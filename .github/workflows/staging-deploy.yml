@@ -1,0 +1,35 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build Project
+      run: |
+        # Example build for Node.js
+        npm install
+        npm run build
+
+    - name: Deploy to Staging Server
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.STAGING_USER }}
+        key: ${{ secrets.STAGING_KEY }}
+        port: 22
+        source: "./"                  # Local folder to deploy
+        target: "~/staging-app"       # Remote folder on your server
+
+    - name: Slack Notification
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"Staging deployment successful!"}' ${{ secrets.SLACK_WEBHOOK }}
