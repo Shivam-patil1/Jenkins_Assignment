@@ -1,102 +1,30 @@
-name: Staging Deployment
+name: Staging Deploy
 
 on:
   push:
     branches:
-      - staging   # Run only on staging branch pushes
+      - staging
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v3
-    # Checkout the repo
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 1️⃣ Checkout your code
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
-        run: npm install
-
-      # 4️⃣ Build application
-      - name: Build app
-        run: npm run build
-
-      # 5️⃣ Deploy to staging server (via SCP)
-      - name: Deploy to Staging
-        uses: appleboy/scp-action@v0.1.7
+      # 2️⃣ Deploy via SSH
+      - name: Deploy to Staging Server
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          source: "."              # copy full app, not just /public
-          target: "/var/www/staging-app"
-
-      # 6️⃣ Restart app with PM2 on staging server
-      - name: Restart App with PM2
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
+          key: ${{ secrets.STAGING_KEY }}
+          port: 22
           script: |
-            cd /var/www/staging-app
-            npm install --production
-            pm2 restart app.js || pm2 start app.js --name "staging-app"
-
-      # 7️⃣ Slack notification
-      - name: Notify Slack
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload: |
-            {
-              "text": "✅ Deployment to *Staging* was successful and app restarted with PM2!"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-    # Set up Node.js
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 20
-
-    # Install npm dependencies
-    - name: Install dependencies
-      run: npm install --production
-      working-directory: ./staging  
-
-    # Deploy to server via SSH
-    - name: Deploy to Staging Server
-      uses: appleboy/ssh-action@v0.1.4
-      with:
-        host: ${{ secrets.STAGING_HOST }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.STAGING_KEY }}
-        port: ${{ secrets.STAGING_PORT }}
-        script: |
-          cd ~/staging-app || mkdir -p ~/staging-app && cd ~/staging-app
-          git fetch origin
-          git checkout staging
-          git reset --hard origin/staging
-          npm install --production
-          pm2 restart staging-app || pm2 start app.js --name staging-app
-
-    # Send Slack notification
-    - name: Slack Notification
-      uses: rtCamp/action-slack-notify@v2
-      with:
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        status: custom
-        custom_payload: |
-          {
-            "text": "✅ Staging deployment completed successfully for branch *staging*."
-          }
+            # create folder if not exists
+            cd ~/staging-app || mkdir -p ~/staging-app && cd ~/staging-app
+            # pull latest code
+            git pull origin staging
+            # install dependencies
