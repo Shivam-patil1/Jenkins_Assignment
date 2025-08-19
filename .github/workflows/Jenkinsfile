@@ -1,32 +1,40 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(name: 'SKIP_TEST', defaultValue: false, description: 'Skip test stage if true')
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
+                echo 'Building the application...'
+                sh 'npm install' // Example build step
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm install'
+        stage('Test') {
+            when {
+                expression { return !params.SKIP_TEST }
             }
-        }
-
-        stage('Run Tests') {
             steps {
+                echo 'Running tests...'
                 sh 'npm test'
             }
         }
-    }
 
-    post {
-        success {
-            echo '✅ Build & Tests passed successfully!'
-        }
-        failure {
-            echo '❌ Build or Tests failed!'
+        stage('Deploy') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { currentBuild.currentResult == 'SUCCESS' }
+                }
+            }
+            steps {
+                echo 'Deploying application...'
+                // Example deploy command
+                sh 'echo "App deployed successfully!"'
+            }
         }
     }
 }
