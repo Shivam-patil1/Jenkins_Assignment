@@ -1,0 +1,20 @@
+node {
+    try {
+        stage('Checkout') {
+            git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
+        }
+
+        stage('Install Dependencies') {
+            sh 'npm install'
+        }
+
+        stage('Run Tests') {
+            sh 'npm test'
+        }
+
+        echo '✅ Build & Tests passed successfully!'
+    } catch (err) {
+        echo '❌ Build or Tests failed!'
+        error("Pipeline failed: ${err}")
+    }
+}
