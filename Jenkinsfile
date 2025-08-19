@@ -6,10 +6,17 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Shivam-patil1/Jenkins_Assignment.git'
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Building the application...'
-                sh 'npm install' // Example build step
+                sh 'npm install'
             }
         }
 
@@ -32,7 +39,6 @@ pipeline {
             }
             steps {
                 echo 'Deploying application...'
-                // Example deploy command
                 sh 'echo "App deployed successfully!"'
             }
         }
